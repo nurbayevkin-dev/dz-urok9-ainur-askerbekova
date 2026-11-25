@@ -28,6 +28,8 @@ body {
 }
 
 .page-header { margin-bottom: 28px; }
+.current-member-control { display: grid; grid-template-columns: auto minmax(180px, 280px); align-items: center; gap: 12px; margin-top: 20px; }
+.current-member-control .field { margin: 0; }
 .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 0.8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.08; letter-spacing: -.045em; }
 .intro { margin: 12px 0 0; color: var(--muted); font-size: 1.05rem; line-height: 1.5; }
@@ -83,6 +85,7 @@ input::placeholder { color: #969d97; }
   .page { width: min(100% - 28px, 1160px); padding-top: 32px; }
   .add-panel { padding: 19px; }
   .family-panel { padding: 19px; }
+  .current-member-control { grid-template-columns: 1fr; gap: 6px; }
   #family-form { grid-template-columns: 1fr; gap: 7px; }
   #family-form .field, #family-form .field-hint, #family-name, #family-form .add-button { grid-column: 1; grid-row: auto; }
   #family-form .add-button { margin-top: 4px; }

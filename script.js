@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "semya-spisok-items-v1";
+  const FAMILY_STORAGE_KEY = "semya-spisok-family-v1";
   const typeNames = { film: "Фильм", book: "Книга", game: "Настольная игра" };
   const labels = { film: "Просмотрено", book: "Прочитано", game: "Играли" };
   const lists = { film: document.querySelector("#films"), book: document.querySelector("#books"), game: document.querySelector("#games") };
@@ -15,10 +16,52 @@
   const familyNameInput = document.querySelector("#family-name");
   const familyHint = document.querySelector("#family-hint");
   const familyMembersList = document.querySelector("#family-members");
-  let familyMembers = [];
+  const currentMemberSelect = document.querySelector("#current-member");
+  function loadFamily() {
+    try {
+      const value = JSON.parse(localStorage.getItem(FAMILY_STORAGE_KEY) || "{}");
+      const members = Array.isArray(value.members) ? value.members.filter((name) => typeof name === "string" && name.trim()) : [];
+      return { members, selected: members.includes(value.selected) ? value.selected : (members[0] || "") };
+    } catch {
+      return { members: [], selected: "" };
+    }
+  }
+  const family = loadFamily();
+  let familyMembers = family.members;
+  let selectedMember = family.selected;
+
+  function saveFamily() {
+    try {
+      localStorage.setItem(FAMILY_STORAGE_KEY, JSON.stringify({ members: familyMembers, selected: selectedMember }));
+    } catch {
+      familyHint.textContent = "Не удалось сохранить участников в браузере.";
+    }
+  }
+
+  currentMemberSelect.addEventListener("change", () => {
+    selectedMember = currentMemberSelect.value;
+    saveFamily();
+  });
 
   function renderFamilyMembers() {
     familyMembersList.replaceChildren();
+    currentMemberSelect.replaceChildren();
+    if (familyMembers.length === 0) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "Сначала добавьте участника";
+      currentMemberSelect.append(option);
+      currentMemberSelect.disabled = true;
+    } else {
+      currentMemberSelect.disabled = false;
+      for (const name of familyMembers) {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        option.selected = name === selectedMember;
+        currentMemberSelect.append(option);
+      }
+    }
     for (const [index, name] of familyMembers.entries()) {
       const row = document.createElement("li");
       row.className = "family-member";
@@ -32,6 +75,8 @@
       remove.addEventListener("click", () => {
         if (!window.confirm(`Удалить участника «${name}»?`)) return;
         familyMembers.splice(index, 1);
+        if (selectedMember === name) selectedMember = familyMembers[0] || "";
+        saveFamily();
         renderFamilyMembers();
       });
       row.append(memberName, remove);
@@ -55,6 +100,8 @@
       return;
     }
     familyMembers.push(name);
+    if (!selectedMember) selectedMember = name;
+    saveFamily();
     familyHint.textContent = "";
     familyNameInput.removeAttribute("aria-invalid");
     familyForm.reset();
