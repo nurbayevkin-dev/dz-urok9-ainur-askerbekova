@@ -34,12 +34,13 @@
     </section>
 
     <section class="list-section" aria-labelledby="list-heading">
-      <div class="list-heading-row">
-        <h2 id="list-heading">Наш список</h2>
-        <span id="item-count" class="item-count" aria-live="polite"></span>
-      </div>
+      <h2 id="list-heading" class="list-title">Наш список</h2>
       <p id="empty-state" class="empty-state">Пока здесь пусто. Добавьте то, что хотите посмотреть, прочитать или сыграть.</p>
-      <ul id="items" class="items" aria-label="Записи семейного списка"></ul>
+      <div class="columns">
+        <section class="list-column" aria-labelledby="films-heading"><div class="column-heading"><h3 id="films-heading">Фильмы</h3><span id="film-count" class="item-count" aria-live="polite">0</span></div><ul id="films" class="items" aria-label="Фильмы"></ul></section>
+        <section class="list-column" aria-labelledby="books-heading"><div class="column-heading"><h3 id="books-heading">Книги</h3><span id="book-count" class="item-count" aria-live="polite">0</span></div><ul id="books" class="items" aria-label="Книги"></ul></section>
+        <section class="list-column" aria-labelledby="games-heading"><div class="column-heading"><h3 id="games-heading">Игры</h3><span id="game-count" class="item-count" aria-live="polite">0</span></div><ul id="games" class="items" aria-label="Игры"></ul></section>
+      </div>
     </section>
   </main>
 </body>

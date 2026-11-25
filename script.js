@@ -3,26 +3,30 @@
 
   const STORAGE_KEY = "semya-spisok-items-v1";
   const typeNames = { film: "Фильм", book: "Книга", game: "Настольная игра" };
+  const labels = { film: "Просмотрено", book: "Прочитано", game: "Играли" };
+  const lists = { film: document.querySelector("#films"), book: document.querySelector("#books"), game: document.querySelector("#games") };
+  const counts = { film: document.querySelector("#film-count"), book: document.querySelector("#book-count"), game: document.querySelector("#game-count") };
   const form = document.querySelector("#add-form");
   const titleInput = document.querySelector("#title");
   const typeInput = document.querySelector("#type");
   const hint = document.querySelector("#title-hint");
-  const list = document.querySelector("#items");
   const emptyState = document.querySelector("#empty-state");
-  const count = document.querySelector("#item-count");
 
   function loadItems() {
     try {
       const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       if (!Array.isArray(value)) return [];
       return value.filter((item) => item && typeof item.id === "string" && typeof item.title === "string" && typeNames[item.type])
-        .map((item) => ({
-          id: item.id,
-          title: item.title,
-          type: item.type,
-          status: item.status === "done" ? "done" : "want",
-          rating: Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 5 ? item.rating : null
-        }));
+        .map((item) => {
+          const completed = item.completed === true || item.status === "done";
+          return {
+            id: item.id,
+            title: item.title,
+            type: item.type,
+            completed,
+            rating: completed && Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 5 ? item.rating : null
+          };
+        });
     } catch {
       return [];
     }
@@ -38,86 +42,86 @@
     }
   }
 
-  function makeOption(value, label, selected) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    option.selected = selected;
-    return option;
-  }
-
   function render() {
-    list.replaceChildren();
+    for (const list of Object.values(lists)) list.replaceChildren();
+    const grouped = { film: [], book: [], game: [] };
+    for (const item of items) grouped[item.type].push(item);
+    for (const type of Object.keys(grouped)) counts[type].textContent = String(grouped[type].length);
     emptyState.hidden = items.length > 0;
-    count.textContent = items.length ? `${items.length} ${items.length === 1 ? "запись" : items.length < 5 ? "записи" : "записей"}` : "";
 
-    for (const item of items) {
-      const row = document.createElement("li");
-      const card = document.createElement("article");
-      card.className = "item-card";
-      const top = document.createElement("div");
-      top.className = "item-top";
-      const description = document.createElement("div");
-      const title = document.createElement("h3");
-      title.className = "item-title";
-      title.textContent = item.title;
-      const type = document.createElement("span");
-      type.className = "type-label";
-      type.textContent = typeNames[item.type];
-      description.append(title, type);
-      top.append(description);
+    for (const type of Object.keys(grouped)) {
+      for (const item of grouped[type]) {
+        const row = document.createElement("li");
+        const card = document.createElement("article");
+        card.className = "item-card";
+        const title = document.createElement("h4");
+        title.className = "item-title";
+        title.textContent = item.title;
+        const typeLabel = document.createElement("span");
+        typeLabel.className = "type-label";
+        typeLabel.textContent = typeNames[type];
+        const top = document.createElement("div");
+        top.className = "item-top";
+        top.append(title, typeLabel);
 
-      const controls = document.createElement("div");
-      controls.className = "item-controls";
-      const statusGroup = document.createElement("div");
-      statusGroup.className = "control-group";
-      const statusLabel = document.createElement("label");
-      statusLabel.className = "control-label";
-      statusLabel.textContent = "Статус";
-      const status = document.createElement("select");
-      status.setAttribute("aria-label", `Статус: ${item.title}`);
-      status.append(makeOption("want", "Хочу", item.status === "want"), makeOption("done", "Готово", item.status === "done"));
-      statusLabel.htmlFor = `status-${item.id}`;
-      status.id = `status-${item.id}`;
-      status.addEventListener("change", () => {
-        item.status = status.value;
-        saveItems();
-        render();
-      });
-      statusGroup.append(statusLabel, status);
+        const completionLabel = document.createElement("label");
+        completionLabel.className = "completion-control";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.completed;
+        checkbox.setAttribute("aria-label", `${labels[type]}: ${item.title}`);
+        checkbox.addEventListener("change", () => {
+          item.completed = checkbox.checked;
+          if (!item.completed) item.rating = null;
+          saveItems();
+          render();
+        });
+        completionLabel.append(checkbox, document.createTextNode(labels[type]));
 
-      const ratingGroup = document.createElement("div");
-      ratingGroup.className = "control-group";
-      const ratingLabel = document.createElement("label");
-      ratingLabel.className = "control-label";
-      ratingLabel.textContent = "Оценка";
-      const rating = document.createElement("select");
-      rating.id = `rating-${item.id}`;
-      ratingLabel.htmlFor = rating.id;
-      rating.setAttribute("aria-label", `Оценка: ${item.title}`);
-      rating.append(makeOption("", "Не оценено", item.rating === null));
-      for (let star = 1; star <= 5; star += 1) rating.append(makeOption(String(star), `${star} ${star === 1 ? "звезда" : star < 5 ? "звезды" : "звёзд"}`, item.rating === star));
-      rating.addEventListener("change", () => {
-        item.rating = rating.value ? Number(rating.value) : null;
-        saveItems();
-        render();
-      });
-      const ratingView = document.createElement("p");
-      ratingView.className = "rating-view";
-      if (item.rating === null) {
-        ratingView.textContent = "не оценено";
-      } else {
-        const stars = document.createElement("span");
-        stars.className = "stars";
-        stars.setAttribute("aria-label", `${item.rating} из 5 звёзд`);
-        stars.textContent = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
-        ratingView.append(stars);
+        const ratingLabel = document.createElement("label");
+        ratingLabel.className = "control-label";
+        ratingLabel.textContent = "Оценка";
+        const rating = document.createElement("select");
+        rating.setAttribute("aria-label", `Оценка: ${item.title}`);
+        rating.disabled = !item.completed;
+        const none = document.createElement("option");
+        none.value = "";
+        none.textContent = "Не оценено";
+        none.selected = item.rating === null;
+        rating.append(none);
+        for (let star = 1; star <= 5; star += 1) {
+          const option = document.createElement("option");
+          option.value = String(star);
+          option.textContent = `${star} ${star === 1 ? "звезда" : star < 5 ? "звезды" : "звёзд"}`;
+          option.selected = item.rating === star;
+          rating.append(option);
+        }
+        rating.addEventListener("change", () => {
+          item.rating = rating.value ? Number(rating.value) : null;
+          saveItems();
+          render();
+        });
+        const ratingView = document.createElement("p");
+        ratingView.className = "rating-view";
+        if (item.rating === null) ratingView.textContent = "не оценено";
+        else {
+          const stars = document.createElement("span");
+          stars.className = "stars";
+          stars.setAttribute("aria-label", `${item.rating} из 5 звёзд`);
+          stars.textContent = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
+          ratingView.append(stars);
+        }
+
+        const controls = document.createElement("div");
+        controls.className = "item-controls";
+        const ratingGroup = document.createElement("div");
+        ratingGroup.className = "control-group";
+        ratingGroup.append(ratingLabel, rating, ratingView);
+        controls.append(completionLabel, ratingGroup);
+        card.append(top, controls);
+        row.append(card);
+        lists[type].append(row);
       }
-      ratingGroup.append(ratingLabel, rating, ratingView);
-      controls.append(statusGroup, ratingGroup);
-      card.append(top, controls);
-      row.append(card);
-      list.append(row);
     }
   }
 
@@ -132,7 +136,7 @@
     }
     hint.textContent = "";
     titleInput.removeAttribute("aria-invalid");
-    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: typeInput.value, status: "want", rating: null });
+    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: typeInput.value, completed: false, rating: null });
     saveItems();
     render();
     form.reset();
