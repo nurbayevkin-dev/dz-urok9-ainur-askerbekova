@@ -129,9 +129,17 @@
       titleInput.focus();
       return;
     }
+    const selectedType = typeInput.value;
+    const normalizedTitle = title.toLocaleLowerCase("ru");
+    if (items.some((item) => item.type === selectedType && item.title.trim().toLocaleLowerCase("ru") === normalizedTitle)) {
+      hint.textContent = "Уже есть в списке";
+      titleInput.removeAttribute("aria-invalid");
+      titleInput.focus();
+      return;
+    }
     hint.textContent = "";
     titleInput.removeAttribute("aria-invalid");
-    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: typeInput.value, completed: false, rating: null });
+    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: selectedType, completed: false, rating: null });
     saveItems();
     render();
     form.reset();
