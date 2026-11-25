@@ -41,6 +41,7 @@
   currentMemberSelect.addEventListener("change", () => {
     selectedMember = currentMemberSelect.value;
     saveFamily();
+    render();
   });
 
   function renderFamilyMembers() {
@@ -100,12 +101,14 @@
       return;
     }
     familyMembers.push(name);
+    if (familyMembers.length === 1) migrateLegacyCompletions();
     if (!selectedMember) selectedMember = name;
     saveFamily();
     familyHint.textContent = "";
     familyNameInput.removeAttribute("aria-invalid");
     familyForm.reset();
     renderFamilyMembers();
+    render();
     familyNameInput.focus();
   });
 
@@ -115,6 +118,26 @@
       familyNameInput.removeAttribute("aria-invalid");
     }
   });
+
+  function migrateLegacyCompletions() {
+    if (!familyMembers.length) return;
+    let changed = false;
+    for (const item of items) {
+      if (!item.completedByMember) {
+        const completedByMember = {};
+        if (Array.isArray(item.completedMembers)) {
+          for (const name of item.completedMembers) completedByMember[name] = true;
+        } else if (item.legacyCompleted) {
+          completedByMember[familyMembers[0]] = true;
+        }
+        item.completedByMember = completedByMember;
+        delete item.completedMembers;
+        delete item.legacyCompleted;
+        changed = true;
+      }
+    }
+    if (changed) saveItems();
+  }
 
   function loadItems() {
     try {
@@ -127,8 +150,12 @@
             id: item.id,
             title: item.title,
             type: item.type,
-            completed,
-            rating: completed && Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 5 ? item.rating : null
+            completedByMember: item.completedByMember && typeof item.completedByMember === "object" && !Array.isArray(item.completedByMember)
+              ? Object.fromEntries(Object.entries(item.completedByMember).filter(([name, checked]) => typeof name === "string" && checked === true))
+              : null,
+            completedMembers: Array.isArray(item.completedMembers) ? item.completedMembers.filter((name) => typeof name === "string") : null,
+            legacyCompleted: !item.completedByMember && !Array.isArray(item.completedMembers) && completed,
+            rating: Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 5 ? item.rating : null
           };
         });
     } catch {
@@ -137,6 +164,8 @@
   }
 
   let items = loadItems();
+
+  migrateLegacyCompletions();
 
   function saveItems() {
     try {
@@ -169,18 +198,23 @@
         completionLabel.className = "completion-control";
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.checked = item.completed;
+        const isCompleted = selectedMember !== "" && item.completedByMember[selectedMember] === true;
+        checkbox.checked = isCompleted;
+        checkbox.disabled = selectedMember === "";
         checkbox.setAttribute("aria-label", `${labels[type]}: ${item.title}`);
         checkbox.addEventListener("change", () => {
-          item.completed = checkbox.checked;
-          if (!item.completed) item.rating = null;
+          if (checkbox.checked) {
+            item.completedByMember[selectedMember] = true;
+          } else {
+            delete item.completedByMember[selectedMember];
+          }
           saveItems();
           render();
         });
         completionLabel.append(checkbox);
 
         const rating = document.createElement("div");
-        rating.className = `star-rating${item.completed ? " is-active" : " is-disabled"}`;
+        rating.className = `star-rating${isCompleted ? " is-active" : " is-disabled"}`;
         rating.setAttribute("role", "group");
         rating.setAttribute("aria-label", `Оценка для «${item.title}»`);
         for (let star = 1; star <= 5; star += 1) {
@@ -188,7 +222,7 @@
           button.type = "button";
           button.className = "star-button";
           button.textContent = star <= (item.rating || 0) ? "★" : "☆";
-          button.disabled = !item.completed;
+          button.disabled = !isCompleted;
           button.setAttribute("aria-label", `${star} ${star === 1 ? "звезда" : star < 5 ? "звезды" : "звёзд"}`);
           button.setAttribute("aria-pressed", String(item.rating === star));
           button.addEventListener("click", () => {
@@ -243,7 +277,7 @@
     }
     hint.textContent = "";
     titleInput.removeAttribute("aria-invalid");
-    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: selectedType, completed: false, rating: null });
+    items.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, title, type: selectedType, completedByMember: {}, rating: null });
     saveItems();
     render();
     form.reset();
