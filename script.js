@@ -57,12 +57,9 @@
         const title = document.createElement("h4");
         title.className = "item-title";
         title.textContent = item.title;
-        const typeLabel = document.createElement("span");
-        typeLabel.className = "type-label";
-        typeLabel.textContent = typeNames[type];
         const top = document.createElement("div");
         top.className = "item-top";
-        top.append(title, typeLabel);
+        top.append(title);
 
         const completionLabel = document.createElement("label");
         completionLabel.className = "completion-control";
@@ -76,49 +73,47 @@
           saveItems();
           render();
         });
-        completionLabel.append(checkbox, document.createTextNode(labels[type]));
+        completionLabel.append(checkbox);
 
-        const ratingLabel = document.createElement("label");
-        ratingLabel.className = "control-label";
-        ratingLabel.textContent = "Оценка";
-        const rating = document.createElement("select");
-        rating.setAttribute("aria-label", `Оценка: ${item.title}`);
-        rating.disabled = !item.completed;
-        const none = document.createElement("option");
-        none.value = "";
-        none.textContent = "Не оценено";
-        none.selected = item.rating === null;
-        rating.append(none);
+        const rating = document.createElement("div");
+        rating.className = `star-rating${item.completed ? " is-active" : " is-disabled"}`;
+        rating.setAttribute("role", "group");
+        rating.setAttribute("aria-label", `Оценка для «${item.title}»`);
         for (let star = 1; star <= 5; star += 1) {
-          const option = document.createElement("option");
-          option.value = String(star);
-          option.textContent = `${star} ${star === 1 ? "звезда" : star < 5 ? "звезды" : "звёзд"}`;
-          option.selected = item.rating === star;
-          rating.append(option);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "star-button";
+          button.textContent = star <= (item.rating || 0) ? "★" : "☆";
+          button.disabled = !item.completed;
+          button.setAttribute("aria-label", `${star} ${star === 1 ? "звезда" : star < 5 ? "звезды" : "звёзд"}`);
+          button.setAttribute("aria-pressed", String(item.rating === star));
+          button.addEventListener("click", () => {
+            item.rating = star;
+            saveItems();
+            render();
+          });
+          rating.append(button);
         }
-        rating.addEventListener("change", () => {
-          item.rating = rating.value ? Number(rating.value) : null;
+        const ratingView = document.createElement("span");
+        ratingView.className = "rating-view";
+        ratingView.textContent = item.rating === null ? "не оценено" : "";
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "delete-button";
+        remove.textContent = "✕";
+        remove.setAttribute("aria-label", `Удалить «${item.title}»`);
+        remove.addEventListener("click", () => {
+          if (!window.confirm("Удалить?")) return;
+          items = items.filter((entry) => entry.id !== item.id);
           saveItems();
           render();
         });
-        const ratingView = document.createElement("p");
-        ratingView.className = "rating-view";
-        if (item.rating === null) ratingView.textContent = "не оценено";
-        else {
-          const stars = document.createElement("span");
-          stars.className = "stars";
-          stars.setAttribute("aria-label", `${item.rating} из 5 звёзд`);
-          stars.textContent = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
-          ratingView.append(stars);
-        }
 
         const controls = document.createElement("div");
         controls.className = "item-controls";
-        const ratingGroup = document.createElement("div");
-        ratingGroup.className = "control-group";
-        ratingGroup.append(ratingLabel, rating, ratingView);
-        controls.append(completionLabel, ratingGroup);
-        card.append(top, controls);
+        controls.append(completionLabel, top, rating, ratingView, remove);
+        card.append(controls);
         row.append(card);
         lists[type].append(row);
       }
