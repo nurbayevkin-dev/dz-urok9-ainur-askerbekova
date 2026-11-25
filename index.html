@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ee">
+  <title>Семейный список</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <p class="eyebrow">Наши семейные планы</p>
+      <h1>Семейный список</h1>
+      <p class="intro">Фильмы, книги и игры, к которым хочется вернуться.</p>
+    </header>
+
+    <section class="panel add-panel" aria-labelledby="add-heading">
+      <h2 id="add-heading">Добавить в список</h2>
+      <form id="add-form" novalidate>
+        <label class="field title-field" for="title">Название</label>
+        <input id="title" name="title" type="text" maxlength="160" placeholder="Например, Дюна" autocomplete="off" aria-describedby="title-hint" required>
+        <p class="field-hint" id="title-hint" aria-live="polite"></p>
+
+        <label class="field" for="type">Тип</label>
+        <select id="type" name="type">
+          <option value="film">Фильм</option>
+          <option value="book">Книга</option>
+          <option value="game">Настольная игра</option>
+        </select>
+        <button class="add-button" type="submit">Добавить</button>
+      </form>
+    </section>
+
+    <section class="list-section" aria-labelledby="list-heading">
+      <div class="list-heading-row">
+        <h2 id="list-heading">Наш список</h2>
+        <span id="item-count" class="item-count" aria-live="polite"></span>
+      </div>
+      <p id="empty-state" class="empty-state">Пока здесь пусто. Добавьте то, что хотите посмотреть, прочитать или сыграть.</p>
+      <ul id="items" class="items" aria-label="Записи семейного списка"></ul>
+    </section>
+  </main>
+</body>
+</html>
