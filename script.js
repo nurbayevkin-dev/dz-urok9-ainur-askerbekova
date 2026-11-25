@@ -11,6 +11,63 @@
   const typeInput = document.querySelector("#type");
   const hint = document.querySelector("#title-hint");
   const emptyState = document.querySelector("#empty-state");
+  const familyForm = document.querySelector("#family-form");
+  const familyNameInput = document.querySelector("#family-name");
+  const familyHint = document.querySelector("#family-hint");
+  const familyMembersList = document.querySelector("#family-members");
+  let familyMembers = [];
+
+  function renderFamilyMembers() {
+    familyMembersList.replaceChildren();
+    for (const [index, name] of familyMembers.entries()) {
+      const row = document.createElement("li");
+      row.className = "family-member";
+      const memberName = document.createElement("span");
+      memberName.textContent = name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "member-delete-button";
+      remove.textContent = "Удалить";
+      remove.setAttribute("aria-label", `Удалить участника «${name}»`);
+      remove.addEventListener("click", () => {
+        if (!window.confirm(`Удалить участника «${name}»?`)) return;
+        familyMembers.splice(index, 1);
+        renderFamilyMembers();
+      });
+      row.append(memberName, remove);
+      familyMembersList.append(row);
+    }
+  }
+
+  familyForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = familyNameInput.value.trim();
+    if (!name) {
+      familyHint.textContent = "Введите имя участника.";
+      familyNameInput.setAttribute("aria-invalid", "true");
+      familyNameInput.focus();
+      return;
+    }
+    if (familyMembers.some((member) => member.toLocaleLowerCase("ru") === name.toLocaleLowerCase("ru"))) {
+      familyHint.textContent = "Такой участник уже есть.";
+      familyNameInput.setAttribute("aria-invalid", "true");
+      familyNameInput.focus();
+      return;
+    }
+    familyMembers.push(name);
+    familyHint.textContent = "";
+    familyNameInput.removeAttribute("aria-invalid");
+    familyForm.reset();
+    renderFamilyMembers();
+    familyNameInput.focus();
+  });
+
+  familyNameInput.addEventListener("input", () => {
+    if (familyNameInput.value.trim()) {
+      familyHint.textContent = "";
+      familyNameInput.removeAttribute("aria-invalid");
+    }
+  });
 
   function loadItems() {
     try {
@@ -154,4 +211,5 @@
   });
 
   render();
+  renderFamilyMembers();
 })();

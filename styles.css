@@ -33,6 +33,15 @@ h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.08; letter-
 .intro { margin: 12px 0 0; color: var(--muted); font-size: 1.05rem; line-height: 1.5; }
 
 .panel, .item-card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; }
+.family-panel { max-width: 720px; margin-bottom: 18px; padding: 24px; }
+#family-form { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; margin-top: 18px; }
+#family-form .field, #family-form .field-hint { grid-column: 1 / -1; }
+#family-form .add-button { grid-column: 2; grid-row: 2; margin-top: 0; padding: 0 18px; }
+#family-name { grid-column: 1; grid-row: 2; }
+.family-members { display: grid; gap: 7px; margin: 16px 0 0; padding: 0; list-style: none; }
+.family-member { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 4px 8px 4px 13px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.member-delete-button { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: #737a74; cursor: pointer; }
+.member-delete-button:hover { color: #a33d32; border-color: #d9b5b0; }
 .add-panel { max-width: 720px; padding: 24px; box-shadow: 0 8px 24px rgb(41 48 43 / 4%); }
 h2 { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; }
 #add-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 18px; }
@@ -73,6 +82,10 @@ input::placeholder { color: #969d97; }
 @media (max-width: 480px) {
   .page { width: min(100% - 28px, 1160px); padding-top: 32px; }
   .add-panel { padding: 19px; }
+  .family-panel { padding: 19px; }
+  #family-form { grid-template-columns: 1fr; gap: 7px; }
+  #family-form .field, #family-form .field-hint, #family-name, #family-form .add-button { grid-column: 1; grid-row: auto; }
+  #family-form .add-button { margin-top: 4px; }
   #add-form { grid-template-columns: 1fr; gap: 7px; }
   .title-field, .field-hint, .add-button { grid-column: 1; }
   #type { margin-bottom: 5px; }

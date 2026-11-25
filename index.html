@@ -16,6 +16,17 @@
       <p class="intro">Фильмы, книги и игры, к которым хочется вернуться.</p>
     </header>
 
+    <section class="panel family-panel" aria-labelledby="family-heading">
+      <h2 id="family-heading">Члены семьи</h2>
+      <form id="family-form" novalidate>
+        <label class="field" for="family-name">Имя</label>
+        <input id="family-name" name="name" type="text" maxlength="80" placeholder="Например, Айнур" autocomplete="off" aria-describedby="family-hint" required>
+        <p class="field-hint" id="family-hint" aria-live="polite"></p>
+        <button class="add-button" type="submit">Добавить участника</button>
+      </form>
+      <ul id="family-members" class="family-members" aria-label="Члены семьи"></ul>
+    </section>
+
     <section class="panel add-panel" aria-labelledby="add-heading">
       <h2 id="add-heading">Добавить в список</h2>
       <form id="add-form" novalidate>
