@@ -15,6 +15,7 @@
   const emptyState = document.querySelector("#empty-state");
   const searchInput = document.querySelector("#search");
   const onlyUnmarkedInput = document.querySelector("#only-unmarked");
+  const sortOrderInput = document.querySelector("#sort-order");
   const familyForm = document.querySelector("#family-form");
   const familyNameInput = document.querySelector("#family-name");
   const familyHint = document.querySelector("#family-hint");
@@ -168,20 +169,25 @@
 
   let items = loadItems();
   let searchQuery = "";
-  let onlyUnmarked = loadViewSettings().onlyUnmarked;
+  const viewSettings = loadViewSettings();
+  let onlyUnmarked = viewSettings.onlyUnmarked;
+  let sortOrder = viewSettings.sortOrder;
 
   function loadViewSettings() {
     try {
       const value = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) || "{}");
-      return { onlyUnmarked: value.onlyUnmarked === true };
+      return {
+        onlyUnmarked: value.onlyUnmarked === true,
+        sortOrder: ["newest", "title", "rating"].includes(value.sortOrder) ? value.sortOrder : "newest"
+      };
     } catch {
-      return { onlyUnmarked: false };
+      return { onlyUnmarked: false, sortOrder: "newest" };
     }
   }
 
   function saveViewSettings() {
     try {
-      localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify({ onlyUnmarked }));
+      localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify({ onlyUnmarked, sortOrder }));
     } catch {
       hint.textContent = "Не удалось сохранить настройки вида.";
     }
@@ -189,6 +195,7 @@
 
   migrateLegacyCompletions();
   onlyUnmarkedInput.checked = onlyUnmarked;
+  sortOrderInput.value = sortOrder;
 
   function saveItems() {
     try {
@@ -206,6 +213,17 @@
       if (item.title.toLocaleLowerCase("ru").includes(searchQuery) && (!onlyUnmarked || !isCompletedByCurrentMember)) {
         grouped[item.type].push(item);
       }
+    }
+    for (const type of Object.keys(grouped)) {
+      grouped[type].sort((first, second) => {
+        if (sortOrder === "title") return first.title.localeCompare(second.title, "ru", { sensitivity: "base" });
+        if (sortOrder === "rating") {
+          if (first.rating === null) return second.rating === null ? 0 : 1;
+          if (second.rating === null) return -1;
+          return second.rating - first.rating;
+        }
+        return 0;
+      });
     }
     for (const type of Object.keys(grouped)) counts[type].textContent = String(grouped[type].length);
     emptyState.hidden = items.length > 0;
@@ -326,6 +344,12 @@
 
   onlyUnmarkedInput.addEventListener("change", () => {
     onlyUnmarked = onlyUnmarkedInput.checked;
+    saveViewSettings();
+    render();
+  });
+
+  sortOrderInput.addEventListener("change", () => {
+    sortOrder = sortOrderInput.value;
     saveViewSettings();
     render();
   });
