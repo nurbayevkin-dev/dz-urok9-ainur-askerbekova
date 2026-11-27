@@ -65,6 +65,8 @@ input::placeholder { color: #969d97; }
 
 .list-section { margin-top: 38px; }
 .list-title { margin-bottom: 14px; }
+.search-control { display: grid; grid-template-columns: auto minmax(240px, 420px); align-items: center; gap: 12px; margin-bottom: 18px; }
+.search-control .field { margin: 0; }
 .columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .list-column { min-width: 0; }
 .column-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
@@ -99,6 +101,7 @@ input::placeholder { color: #969d97; }
   #add-form #type { grid-row: 2; margin: 0; }
   #add-form .add-button { grid-row: 3; width: 100%; margin: 0; }
   #add-form .field-hint { grid-row: 4; }
+  .search-control { grid-template-columns: 1fr; gap: 6px; }
   .item-card { padding: 3px 5px; }
   .item-controls { grid-template-columns: 23px minmax(25px, 1fr) auto auto 26px; gap: 3px; }
   .item-title { font-size: .85rem; }

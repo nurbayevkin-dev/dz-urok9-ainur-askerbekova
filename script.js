@@ -12,6 +12,7 @@
   const typeInput = document.querySelector("#type");
   const hint = document.querySelector("#title-hint");
   const emptyState = document.querySelector("#empty-state");
+  const searchInput = document.querySelector("#search");
   const familyForm = document.querySelector("#family-form");
   const familyNameInput = document.querySelector("#family-name");
   const familyHint = document.querySelector("#family-hint");
@@ -164,6 +165,7 @@
   }
 
   let items = loadItems();
+  let searchQuery = "";
 
   migrateLegacyCompletions();
 
@@ -178,7 +180,9 @@
   function render() {
     for (const list of Object.values(lists)) list.replaceChildren();
     const grouped = { film: [], book: [], game: [] };
-    for (const item of items) grouped[item.type].push(item);
+    for (const item of items) {
+      if (item.title.toLocaleLowerCase("ru").includes(searchQuery)) grouped[item.type].push(item);
+    }
     for (const type of Object.keys(grouped)) counts[type].textContent = String(grouped[type].length);
     emptyState.hidden = items.length > 0;
 
@@ -289,6 +293,11 @@
       hint.textContent = "";
       titleInput.removeAttribute("aria-invalid");
     }
+  });
+
+  searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value.trim().toLocaleLowerCase("ru");
+    render();
   });
 
   render();
