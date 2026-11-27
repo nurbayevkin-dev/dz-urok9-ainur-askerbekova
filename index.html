@@ -50,6 +50,11 @@
 
     <section class="list-section" aria-labelledby="list-heading">
       <h2 id="list-heading" class="list-title">Наш список</h2>
+      <section class="recommendation" aria-labelledby="recommendation-heading">
+        <h3 id="recommendation-heading">Что посмотреть сегодня?</h3>
+        <button id="pick-today" class="recommendation-button" type="button">Что посмотреть сегодня? 🎲</button>
+        <div id="recommendation-result" class="recommendation-result" aria-live="polite" hidden></div>
+      </section>
       <div class="search-control">
         <label class="field" for="search">Поиск</label>
         <input id="search" name="search" type="search" placeholder="Найти по названию" autocomplete="off">

@@ -5,6 +5,7 @@
   const FAMILY_STORAGE_KEY = "semya-spisok-family-v1";
   const VIEW_STORAGE_KEY = "semya-spisok-view-v1";
   const typeNames = { film: "Фильм", book: "Книга", game: "Настольная игра" };
+  const typeGroupNames = { film: "Фильмы", book: "Книги", game: "Игры" };
   const labels = { film: "Просмотрено", book: "Прочитано", game: "Играли" };
   const lists = { film: document.querySelector("#films"), book: document.querySelector("#books"), game: document.querySelector("#games") };
   const counts = { film: document.querySelector("#film-count"), book: document.querySelector("#book-count"), game: document.querySelector("#game-count") };
@@ -16,6 +17,8 @@
   const searchInput = document.querySelector("#search");
   const onlyUnmarkedInput = document.querySelector("#only-unmarked");
   const sortOrderInput = document.querySelector("#sort-order");
+  const pickTodayButton = document.querySelector("#pick-today");
+  const recommendationResult = document.querySelector("#recommendation-result");
   const familyForm = document.querySelector("#family-form");
   const familyNameInput = document.querySelector("#family-name");
   const familyHint = document.querySelector("#family-hint");
@@ -45,6 +48,7 @@
   currentMemberSelect.addEventListener("change", () => {
     selectedMember = currentMemberSelect.value;
     saveFamily();
+    clearRecommendation();
     render();
   });
 
@@ -172,6 +176,7 @@
   const viewSettings = loadViewSettings();
   let onlyUnmarked = viewSettings.onlyUnmarked;
   let sortOrder = viewSettings.sortOrder;
+  let lastRecommendationId = "";
 
   function loadViewSettings() {
     try {
@@ -203,6 +208,53 @@
     } catch {
       hint.textContent = "Не удалось сохранить список в браузере.";
     }
+  }
+
+  function clearRecommendation() {
+    lastRecommendationId = "";
+    recommendationResult.replaceChildren();
+    recommendationResult.hidden = true;
+  }
+
+  function showRecommendationMessage(message) {
+    recommendationResult.replaceChildren();
+    const text = document.createElement("p");
+    text.className = "recommendation-message";
+    text.textContent = message;
+    recommendationResult.append(text);
+    recommendationResult.hidden = false;
+  }
+
+  function pickRecommendation(another = false) {
+    if (!selectedMember) {
+      showRecommendationMessage("Сначала выберите участника.");
+      return;
+    }
+    const candidates = items.filter((item) => item.completedByMember?.[selectedMember] !== true);
+    if (candidates.length === 0) {
+      showRecommendationMessage("Всё уже посмотрели!");
+      return;
+    }
+    const alternatives = another && candidates.length > 1
+      ? candidates.filter((item) => item.id !== lastRecommendationId)
+      : candidates;
+    const item = alternatives[Math.floor(Math.random() * alternatives.length)];
+    lastRecommendationId = item.id;
+    recommendationResult.replaceChildren();
+
+    const type = document.createElement("p");
+    type.className = "recommendation-type";
+    type.textContent = typeGroupNames[item.type];
+    const title = document.createElement("p");
+    title.className = "recommendation-title";
+    title.textContent = item.title;
+    const anotherButton = document.createElement("button");
+    anotherButton.type = "button";
+    anotherButton.className = "recommendation-button";
+    anotherButton.textContent = "Ещё вариант";
+    anotherButton.addEventListener("click", () => pickRecommendation(true));
+    recommendationResult.append(type, title, anotherButton);
+    recommendationResult.hidden = false;
   }
 
   function render() {
@@ -255,6 +307,7 @@
             delete item.completedByMember[selectedMember];
           }
           saveItems();
+          clearRecommendation();
           render();
         });
         completionLabel.append(checkbox);
@@ -291,6 +344,7 @@
           if (!window.confirm("Удалить?")) return;
           items = items.filter((entry) => entry.id !== item.id);
           saveItems();
+          clearRecommendation();
           render();
         });
 
@@ -353,6 +407,8 @@
     saveViewSettings();
     render();
   });
+
+  pickTodayButton.addEventListener("click", () => pickRecommendation());
 
   render();
   renderFamilyMembers();
