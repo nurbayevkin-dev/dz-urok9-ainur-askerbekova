@@ -67,6 +67,8 @@ input::placeholder { color: #969d97; }
 .list-title { margin-bottom: 14px; }
 .search-control { display: grid; grid-template-columns: auto minmax(240px, 420px); align-items: center; gap: 12px; margin-bottom: 18px; }
 .search-control .field { margin: 0; }
+.filter-control { display: flex; align-items: center; gap: 10px; min-height: 48px; margin: -6px 0 12px; color: var(--ink); font-weight: 650; cursor: pointer; }
+.filter-control input { flex: 0 0 22px; width: 22px; height: 22px; min-height: 22px; margin: 0; accent-color: var(--green); }
 .columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .list-column { min-width: 0; }
 .column-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }

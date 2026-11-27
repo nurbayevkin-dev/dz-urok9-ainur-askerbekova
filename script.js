@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "semya-spisok-items-v1";
   const FAMILY_STORAGE_KEY = "semya-spisok-family-v1";
+  const VIEW_STORAGE_KEY = "semya-spisok-view-v1";
   const typeNames = { film: "Фильм", book: "Книга", game: "Настольная игра" };
   const labels = { film: "Просмотрено", book: "Прочитано", game: "Играли" };
   const lists = { film: document.querySelector("#films"), book: document.querySelector("#books"), game: document.querySelector("#games") };
@@ -13,6 +14,7 @@
   const hint = document.querySelector("#title-hint");
   const emptyState = document.querySelector("#empty-state");
   const searchInput = document.querySelector("#search");
+  const onlyUnmarkedInput = document.querySelector("#only-unmarked");
   const familyForm = document.querySelector("#family-form");
   const familyNameInput = document.querySelector("#family-name");
   const familyHint = document.querySelector("#family-hint");
@@ -166,8 +168,27 @@
 
   let items = loadItems();
   let searchQuery = "";
+  let onlyUnmarked = loadViewSettings().onlyUnmarked;
+
+  function loadViewSettings() {
+    try {
+      const value = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) || "{}");
+      return { onlyUnmarked: value.onlyUnmarked === true };
+    } catch {
+      return { onlyUnmarked: false };
+    }
+  }
+
+  function saveViewSettings() {
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify({ onlyUnmarked }));
+    } catch {
+      hint.textContent = "Не удалось сохранить настройки вида.";
+    }
+  }
 
   migrateLegacyCompletions();
+  onlyUnmarkedInput.checked = onlyUnmarked;
 
   function saveItems() {
     try {
@@ -181,7 +202,10 @@
     for (const list of Object.values(lists)) list.replaceChildren();
     const grouped = { film: [], book: [], game: [] };
     for (const item of items) {
-      if (item.title.toLocaleLowerCase("ru").includes(searchQuery)) grouped[item.type].push(item);
+      const isCompletedByCurrentMember = selectedMember !== "" && item.completedByMember?.[selectedMember] === true;
+      if (item.title.toLocaleLowerCase("ru").includes(searchQuery) && (!onlyUnmarked || !isCompletedByCurrentMember)) {
+        grouped[item.type].push(item);
+      }
     }
     for (const type of Object.keys(grouped)) counts[type].textContent = String(grouped[type].length);
     emptyState.hidden = items.length > 0;
@@ -202,7 +226,7 @@
         completionLabel.className = "completion-control";
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        const isCompleted = selectedMember !== "" && item.completedByMember[selectedMember] === true;
+        const isCompleted = selectedMember !== "" && item.completedByMember?.[selectedMember] === true;
         checkbox.checked = isCompleted;
         checkbox.disabled = selectedMember === "";
         checkbox.setAttribute("aria-label", `${labels[type]}: ${item.title}`);
@@ -297,6 +321,12 @@
 
   searchInput.addEventListener("input", () => {
     searchQuery = searchInput.value.trim().toLocaleLowerCase("ru");
+    render();
+  });
+
+  onlyUnmarkedInput.addEventListener("change", () => {
+    onlyUnmarked = onlyUnmarkedInput.checked;
+    saveViewSettings();
     render();
   });
 
